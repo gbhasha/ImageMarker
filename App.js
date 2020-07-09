@@ -36,10 +36,11 @@ const gallery = require('./gallery.jpg');
 const marker = require('./marker-icon.png');
 const addIcon = require('./add-icon.png');
 
-const App: () => React$Node = () => {
+const App = () => {
   const [markerList, setMarkerList] = useState([]);
   const [markerText, setMarkerText] = useState('');
   const [selectedMarker, setSelectedMarker] = useState(-1);
+  const commentTextInput = React.createRef();
   const {
     height: markerImageHeight,
     width: markerImageWidth,
@@ -61,6 +62,9 @@ const App: () => React$Node = () => {
     console.log(markerList.length);
     setSelectedMarker(markerList.length);
     setMarkerText('');
+    if(selectedMarker >= 0) {
+      commentTextInput.current.focus();
+    }
   };
 
   const handleInputChange = (text) => {
@@ -96,7 +100,7 @@ const App: () => React$Node = () => {
     inputContainer = ( <View style={{ height:50, backgroundColor: 'white', alignItems: 'center', justifyContent: 'center', }}>
       <View style={{position: "absolute",bottom:0, flexDirection:'row' }}>
       <View style={{flex:1}}>
-        <TextInput onChangeText={handleInputChange} value={markerText} placeholder='Enter Marker Text'  style={{width: 'auto', height: 50, paddingHorizontal:15}} /> 
+        <TextInput ref={commentTextInput} autoFocus onChangeText={handleInputChange} value={markerText} placeholder='Enter Marker Text'  style={{width: 'auto', height: 50, paddingHorizontal:15}} /> 
       </View>
       <View style={{width:60, justifyContent:'center'}} >
         <TouchableOpacity style={{alignItems:'center', justifyContent:'center'}} onPress={handleOkClick}>
