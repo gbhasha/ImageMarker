@@ -18,6 +18,9 @@ import {
   StatusBar,
   Image,
   TouchableOpacity,
+  TextInput,
+  Button,
+  KeyboardAvoidingView,
 } from 'react-native';
 
 import {
@@ -31,9 +34,12 @@ import {
 const gallery = require('./gallery.jpg');
 
 const marker = require('./marker-icon.png');
+const addIcon = require('./add-icon.png');
 
 const App: () => React$Node = () => {
   const [markerList, setMarkerList] = useState([]);
+  const [markerText, setMarkerText] = useState('');
+  const [selectedMarker, setSelectedMarker] = useState(-1);
   const {
     height: markerImageHeight,
     width: markerImageWidth,
@@ -49,13 +55,108 @@ const App: () => React$Node = () => {
       {
         x: locationX,
         y: locationY,
+        comment: '',
       },
     ]);
+    console.log(markerList.length);
+    setSelectedMarker(markerList.length);
+    setMarkerText('');
   };
+
+  const handleInputChange = (text) => {
+    setMarkerText(text);
+  }
+
+  const handleMarkerClick = (index) => {
+    //Store the Index of current selected Marker. So the value can be updated using text input.
+    setSelectedMarker(index);
+    //Set Marker value to Text Input
+    setMarkerText(markerList[index].comment);
+  }
+  
+  //updating the marker comment value.
+  const handleOkClick = () => {
+    if(markerText.trim() == ''){
+      alert('Please enter the marker text');
+    }else{
+      const tempArray = [...markerList];
+      tempArray[selectedMarker].comment = markerText;
+      setMarkerList(tempArray);
+      setSelectedMarker(-1);
+      alert('Done');
+    }
+  }
+
+  let inputContainer = null;
+  let imageContainer = null;
+  
+  console.log(selectedMarker);
+  
+  if(selectedMarker >= 0) {
+    inputContainer = ( <View style={{ height:50, backgroundColor: 'white', alignItems: 'center', justifyContent: 'center', }}>
+      <View style={{position: "absolute",bottom:0, flexDirection:'row' }}>
+      <View style={{flex:1}}>
+        <TextInput onChangeText={handleInputChange} value={markerText} placeholder='Enter Marker Text'  style={{width: 'auto', height: 50, paddingHorizontal:15}} /> 
+      </View>
+      <View style={{width:60, justifyContent:'center'}} >
+        <TouchableOpacity style={{alignItems:'center', justifyContent:'center'}} onPress={handleOkClick}>
+          <Image
+            style={styles.addLogo}
+            source={addIcon}
+          />
+        </TouchableOpacity>
+      </View>
+      </View>
+    </View>
+    )
+  }
+  if(Boolean(markerList.length)) {
+    imageContainer = markerList.map((markerItem, markerIndex) => {
+      const {x, y} = markerItem;
+
+      const _x = Number(x);
+      const _y = Number(y);
+      const left = _x;
+
+      const top = markerImageHeight > _y ? _y : _y - markerImageHeight;
+
+      const keyVal = `x${left}-y${top}`;
+      return (
+        <TouchableOpacity 
+          key={keyVal}
+          //onPress={() => alert(`marker clicked -  ${keyVal}`)}
+          onPress={() => handleMarkerClick(markerIndex)}
+          style={{
+            flex: 8,
+            position: 'absolute',
+            zIndex: 1,
+            left,
+            top,
+          }}>
+
+          <Image
+            source={marker}
+            style={{
+              width: markerImageWidth,
+              height: markerImageHeight,
+            }}
+          />
+          
+        </TouchableOpacity>
+      );
+    });
+  }
+  
   return (
     <>
       <StatusBar barStyle="dark-content" />
-      <SafeAreaView>
+      <SafeAreaView style={{ flex: 1}}>
+
+      <KeyboardAvoidingView style={{ flex: 1}} behavior={Platform.select({ios: 'padding', android: null})}  >
+      <View style={{ flex: 1}}>
+
+        <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center',  }}>
+        
         <ScrollView
           contentInsetAdjustmentBehavior="automatic"
           style={styles.scrollView}>
@@ -63,7 +164,6 @@ const App: () => React$Node = () => {
             style={{
               flex: 1,
               position: 'relative',
-              backgroundColor: 'gray',
             }}>
             <TouchableOpacity
               activeOpacity={1}
@@ -81,67 +181,18 @@ const App: () => React$Node = () => {
                 }}
               />
             </TouchableOpacity>
-            {Boolean(markerList.length) &&
-              markerList.map((markerItem) => {
-                const {x, y} = markerItem;
+            {imageContainer}
 
-                const _x = Number(x);
-                const _y = Number(y);
-                const left = _x;
-
-                const top =
-                  markerImageHeight > _y ? _y : _y - markerImageHeight;
-
-                const keyVal = `x${left}-y${top}`;
-                return (
-                  <TouchableOpacity
-                    key={keyVal}
-                    onPress={() => alert(`marker clicked -  ${keyVal}`)}
-                    style={{
-                      position: 'absolute',
-                      zIndex: 1,
-                      left,
-                      top,
-                    }}>
-                    <Image
-                      source={marker}
-                      style={{
-                        width: markerImageWidth,
-                        height: markerImageHeight,
-                      }}
-                    />
-                  </TouchableOpacity>
-                );
-              })}
-
-            {/* <View style={styles.sectionContainer}>
-              <Text style={styles.sectionTitle}>Step One</Text>
-              <Text style={styles.sectionDescription}>
-                Edit <Text style={styles.highlight}>App.js</Text> to change this
-                screen and then come back to see your edits.
-              </Text>
-            </View>
-            <View style={styles.sectionContainer}>
-              <Text style={styles.sectionTitle}>See Your Changes</Text>
-              <Text style={styles.sectionDescription}>
-                <ReloadInstructions />
-              </Text>
-            </View>
-            <View style={styles.sectionContainer}>
-              <Text style={styles.sectionTitle}>Debug</Text>
-              <Text style={styles.sectionDescription}>
-                <DebugInstructions />
-              </Text>
-            </View>
-            <View style={styles.sectionContainer}>
-              <Text style={styles.sectionTitle}>Learn More</Text>
-              <Text style={styles.sectionDescription}>
-                Read the docs to discover what to do next:
-              </Text>
-            </View>
-            <LearnMoreLinks /> */}
           </View>
+         
+          
         </ScrollView>
+        </View>
+
+            {inputContainer}
+      </View>
+        </KeyboardAvoidingView>
+
       </SafeAreaView>
     </>
   );
@@ -151,38 +202,9 @@ const styles = StyleSheet.create({
   scrollView: {
     backgroundColor: Colors.lighter,
   },
-  engine: {
-    position: 'absolute',
-    right: 0,
-  },
-  body: {
-    backgroundColor: Colors.white,
-  },
-  sectionContainer: {
-    marginTop: 32,
-    paddingHorizontal: 24,
-  },
-  sectionTitle: {
-    fontSize: 24,
-    fontWeight: '600',
-    color: Colors.black,
-  },
-  sectionDescription: {
-    marginTop: 8,
-    fontSize: 18,
-    fontWeight: '400',
-    color: Colors.dark,
-  },
-  highlight: {
-    fontWeight: '700',
-  },
-  footer: {
-    color: Colors.dark,
-    fontSize: 12,
-    fontWeight: '600',
-    padding: 4,
-    paddingRight: 12,
-    textAlign: 'right',
+  addLogo: {
+    width: 40,
+    height: 40,
   },
 });
 
